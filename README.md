@@ -237,3 +237,7 @@ Repository contents include backend, separate frontend, all tests, root AI instr
 - **Description:** Weather app built with ASP.NET Core, React TypeScript, Onion Architecture, CQRS, EF Core SQLite, Docker, and Playwright testing.
 - **Topics:** `weather-app`, `aspnet-core`, `dotnet`, `react`, `typescript`, `onion-architecture`, `cqrs`, `mediatr`, `entity-framework-core`, `sqlite`, `docker`, `playwright`.
 - **Initial release tag:** `v1.0.0`.
+
+## Contributor
+
+[Muhamad Nizar Iqbal (@i4ba1)](https://github.com/i4ba1)

@@ -1,8 +1,20 @@
 # Xtramile Weather
 
-ASP.NET Core weather API and a separate React TypeScript client for the Xtramile practical assessment. Select a country/city, inspect current weather, and save a persistent weather note. Weather comes from OpenWeatherMap; tests use synthetic responses and require no API key.
+ASP.NET Core weather API and a separate React TypeScript client for the Xtramile practical assessment. Select a country/city, inspect current weather, and save a persistent weather note. Weather comes from OpenWeatherMap; the default automated tests use synthetic responses and require no API key.
+
+## Live workflow demonstration
+
+![Headed Playwright recording of country and city selection, live Jakarta weather, note saving and country selection reset](docs/media/weather-workflow.gif)
+
+Recorded on 4 October 2026 with visible Chromium. The browser calls the React development server, which proxies API requests to ASP.NET Core. The backend retrieves live weather from OpenWeatherMap and persists the note in SQLite. No API responses were mocked in this recording; the weather shown reflects the recording time.
+
+The Playwright run passed: country/city/weather requests returned 200, note creation returned 201, and changing country cleared the previous city and weather. The created note was independently verified in SQLite. A separate Docker smoke check verified that a note survived container replacement using the named volume.
+
+See [recording instructions](#record-a-workflow-against-the-running-backend) to reproduce the demo. The GIF is included in `docs/media/` so it displays from a repository checkout or on GitHub; full reports, traces and MP4 files remain local under `artifacts/`.
 
 ## Architecture and CQRS decoupling
+
+The backend follows **Onion Architecture**: Domain contains the core rules, Application defines use cases and interfaces, and Infrastructure implements those interfaces. Dependencies point toward the core. API composes the layers and dispatches requests through MediatR; dependency injection selects concrete infrastructure implementations at startup.
 
 Backend layers are folders inside `src/WeatherApp/`, as requested for AI-assisted assessment implementations:
 
@@ -49,7 +61,17 @@ npx playwright install chromium
 cd ..
 ```
 
-For Linux browser-test setup, use `npx playwright install --with-deps chromium`. Installation downloads dependencies/browser binaries; test execution itself does not call external services.
+For Linux browser-test setup, use `npx playwright install --with-deps chromium`. Installation downloads dependencies/browser binaries; the default test suite does not call external services. The optional live recording requires internet access and an active API key.
+
+### Get and configure an OpenWeatherMap key
+
+1. [Create an account](https://home.openweathermap.org/users/sign_up) and verify your email.
+2. Copy the complete key from your account's [API keys page](https://home.openweathermap.org/api_keys). Activation can take up to two hours, according to the [OpenWeather FAQ](https://openweathermap.org/faq).
+3. For Docker, put `OPENWEATHERMAP_API_KEY=your-key` in the root `.env` file. For native development, set `OpenWeatherMap__ApiKey` in the backend terminal as shown below. Native `dotnet run` does not automatically load `.env`.
+
+This app uses the Current Weather endpoint (`/data/2.5/weather`). Keep the key in backend configuration; `.env` is ignored by Git. After editing the Docker key, run `docker compose up -d --force-recreate` to apply it without rebuilding the image or deleting the database volume.
+
+If weather returns 503, the backend key is missing. A 502 indicates a provider error or rejected response; an inactive or invalid key can cause this. Check the key and its activation status before retrying. A 504 indicates a provider timeout.
 
 ## Run locally
 
@@ -71,10 +93,12 @@ Open http://localhost:5173. Vite proxies `/api` to http://localhost:5000. The ke
 
 The default SQLite file is `src/WeatherApp/data/weather.db` in native development. Override `ConnectionStrings__Weather` with a SQLite connection string to change it. Relative paths resolve against the backend content root. Startup creates the directory and initializes the schema with `EnsureCreated`. This bounded assessment has a fixed schema; future schema changes need a deliberate migration strategy rather than mixing EnsureCreated with migrations. Notes survive process restarts. Use one app instance with SQLite; provider changes and multi-instance production deployment require additional design and database-specific tests.
 
+`WeatherDbContext` is registered through `AddDbContext` with a scoped lifetime, and the note repository is scoped too. Each API request receives its own context. Adding a note marks it as Added in EF Core's change tracker; the command awaits `SaveChangesAsync` before reporting success. Read verification uses `AsNoTracking()` to avoid tracking entities that will not be changed. UI selection and feedback state stay in React; persisted notes stay in SQLite.
+
 ## Production build and Docker
 
 ```powershell
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 # Edit .env to set OPENWEATHERMAP_API_KEY, then:
 docker compose up --build -d
 ```
@@ -136,7 +160,7 @@ Notes require a catalog city, two-letter country code, and trimmed nonblank text
 
 Changing the selected city cancels the client request and clears old save feedback. It does not undo a note already accepted and persisted by the server for the original selection.
 
-## Automated testing — assessment section 4
+## Automated testing
 
 ```powershell
 dotnet build WeatherApp.slnx -c Release
@@ -156,16 +180,60 @@ Or run `./scripts/verify.ps1` from the root after setup. Use `./scripts/verify.p
 - WebApplicationFactory tests use isolated SQLite and fake weather to exercise routes, DTOs, created identifiers, validation and provider errors.
 - Adapter tests use fake HttpMessageHandler responses for payload parsing, metric mapping, dew point, malformed payloads, failure statuses, timeout and missing configuration.
 - Vitest/React Testing Library tests use mocked fetch for metrics, saves, errors, selection resets, duplicate saves and stale requests.
-- Playwright tests intercept all API calls and cover the complete browser workflow and error feedback.
+- Default Playwright tests intercept all API calls and cover the complete browser workflow and error feedback.
 
-No automated test contacts live OpenWeatherMap. Tests need no API key. GitHub Actions installs dependencies, runs the same checks, validates Compose and builds the Docker image. Dependency/image setup uses the network; tests use only local/fake services.
+The default automated suite and CI do not contact live OpenWeatherMap and need no API key. GitHub Actions installs dependencies, runs the same checks, validates Compose and builds the Docker image. Dependency/image setup uses the network; default tests use only local/fake services. The opt-in live recording below calls OpenWeatherMap and is run separately.
 
-## AI tooling — assessment section 5
+### Record a workflow against the running backend
+
+Review `frontend/recording/sample-data.json` before running the recording. It supplies synthetic Jakarta weather and the note text. The recording intercepts only the weather response; country/city requests and note creation use the actual backend and SQLite. A visible banner labels the synthetic weather.
+
+Start the backend on port 5000 and Vite on port 5173 using the local instructions above. For recording, set an isolated SQLite database in the backend terminal before starting it. From the repository root:
+
+```powershell
+$recordingDb = Join-Path $PWD 'artifacts/e2e/sample.db'
+$env:ConnectionStrings__Weather = "Data Source=$recordingDb"
+dotnet run --project src/WeatherApp --launch-profile http
+```
+
+```powershell
+cd frontend
+npm run test:e2e:record
+cd ..
+python -m pip install --target .superpowers/video-tools imageio-ffmpeg==0.6.0
+python scripts/convert-e2e-video.py
+```
+
+The test verifies weather metrics, a real 201 note response, and country selection reset. Each run creates a note in the selected database. Artifacts under `artifacts/e2e/` include the HTML report, trace, source WebM, created-note JSON, screenshot, `weather-workflow.mp4`, and `weather-workflow.gif`. The converter also accepts `--ffmpeg <path>` to use an existing FFmpeg installation. These local artifacts are ignored by Git.
+
+For an explicitly requested live smoke recording, start both services and configure an active backend API key, then run these commands. This separate configuration opens visible Chromium, makes real provider calls, and creates a timestamped note; it is excluded from the offline test configurations and CI.
+
+```powershell
+cd frontend
+npx playwright test --config playwright.live.config.ts --headed
+cd ..
+python scripts/convert-e2e-video.py --artifact-dir artifacts/live-e2e
+```
+
+Live recordings, API status evidence, weather JSON and note acknowledgement are saved under `artifacts/live-e2e/`. They contain no provider key. Python and FFmpeg (or the workspace-local `imageio-ffmpeg` installation above) are needed only for conversion. To inspect the interactive report, run `npx playwright show-report ../artifacts/live-e2e/report` from `frontend/`.
+
+To update the embedded demo after a successful recording, copy `artifacts/live-e2e/weather-workflow.gif` to `docs/media/weather-workflow.gif`.
+
+## AI tooling
 
 Root `AGENTS.md` defines architectural dependency boundaries, CQRS patterns, naming conventions, validation/persistence placement, strict TypeScript, offline testing, and secret handling. The approved spec and task plan live in `docs/superpowers/`. Superpowers executing-plans applies test-first implementation and verification checkpoints; the ignored `.superpowers/` ledger tracks local progress. Codex implements the files and runs the actual checks; these instructions supplement the code and tests.
 
+Codex automatically reads the repository-root `AGENTS.md` as project instructions when working in this checkout. Edit that file to change the project's AI guidance; no API key or prompt-file path setting is required. The explicitly requested live smoke recording is an exception to the offline testing rule and remains separate from default tests and CI.
+
 Dependencies are pinned in csproj/package.json and package-lock.json. MediatR 12.5.0 uses its Apache 2.0 license; the newer commercial release line is not required for this assessment. EF Core is pinned to 10.0.12; SQLitePCLRaw bundle 3.0.5 replaces the vulnerable native dependency found during setup.
 
-## Deliverables — assessment section 6
+## Deliverables
 
 Repository contents include backend, separate frontend, all tests, root AI instructions, Docker/Compose files, CI workflow, and this README. The README covers architecture/CQRS decoupling, setup/build/run/testing, EF Core state management, design decisions, and AI configuration. GitHub publication is a separate authorized operation requiring a target repository; this local implementation does not publish automatically.
+
+### Repository metadata
+
+- **Name/title:** `xtramile-weather-app`
+- **Description:** Weather app built with ASP.NET Core, React TypeScript, Onion Architecture, CQRS, EF Core SQLite, Docker, and Playwright testing.
+- **Topics:** `weather-app`, `aspnet-core`, `dotnet`, `react`, `typescript`, `onion-architecture`, `cqrs`, `mediatr`, `entity-framework-core`, `sqlite`, `docker`, `playwright`.
+- **Initial release tag:** `v1.0.0`.

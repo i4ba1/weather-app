@@ -15,3 +15,9 @@ frontend/dist/
 .superpowers/
 .worktrees/
 artifacts/
+.vs/
+**/*.csproj.user
+*.user
+*.suo
+**/TestResults/
+/Practical Test .NET Xtramile Solutions 2026.pdf

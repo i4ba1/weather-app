@@ -14,3 +14,6 @@ frontend/dist
 .env.*
 *.pdf
 tests
+artifacts
+.vs
+**/*.csproj.user

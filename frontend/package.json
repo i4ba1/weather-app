@@ -9,7 +9,8 @@
     "test": "vitest",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:record": "playwright test --config playwright.recording.config.ts"
   },
   "dependencies": {
     "react": "19.3.0",

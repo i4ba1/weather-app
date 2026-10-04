@@ -15,5 +15,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["src", "e2e", "*.ts"]
+  "include": ["src", "e2e", "recording", "*.ts"]
 }

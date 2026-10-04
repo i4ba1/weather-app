@@ -11,20 +11,22 @@ Implemented on `feature/xtramile-weather` using the approved recovery design and
 - Production API errors: JSON 404 for unknown API route and 503 for missing provider configuration.
 - Desktop/mobile React rendering inspected with synthetic weather; no horizontal overflow at 390px.
 - Compose configuration parses successfully.
+- After the Docker Engine reset: Linux multi-stage image built, React and API served on port 8080, and a real SQLite note survived container replacement using the named volume. An initially incomplete npm install was resolved by rebuilding without its cached dependency layer.
+- Recording run: all 3 existing Playwright tests and the additional recorded workflow passed. The supplied Jakarta fixture is visibly labeled synthetic; catalog requests and note creation use the running native backend. The created identifier was verified in SQLite. MP4 fully decoded and animated GIF generated under `artifacts/e2e/`.
 
 ## Remaining environment and publication work
 
-Docker Desktop reports `Docker Desktop is unable to start`, including after attempting its startup command. The Docker image build and container persistence smoke test could not run locally. Docker/Compose files and a CI image-build step are supplied, but their execution is not claimed as verified. Run the plan's Docker smoke step when an engine is available.
+The earlier Docker startup limitation is resolved following the user's engine reset. The native development services and Docker application were left running after the recording and smoke tests.
 
-No live OpenWeatherMap call was made; set the server API key for live verification. GitHub publication requires the target repository and authorization. The existing requirements PDF was preserved and left untracked.
+With the configured API key active, both native and Docker backends returned live Jakarta weather. A separate headed Playwright workflow passed using real frontend/backend/provider requests, and its created note was independently verified in SQLite. The GIF is included in the README; full recordings and evidence remain local under `artifacts/live-e2e/`. GitHub publication requires the target repository and authorization. The existing requirements PDF was preserved and excluded from Git.
 
 ## Decisions and review rulings
 
 - Used the existing feature branch: the approved plan names it and the original repository had no commits; this provides no additional worktree isolation.
 - Kept the ignored progress ledger for recovery: a small local artifact remains.
 - Pinned Apache-licensed MediatR 12.5.0 and patched SQLite dependencies: newer MediatR features are outside this implementation.
-- Recorded the Docker limitation instead of substituting native evidence: container-specific failures may still exist.
-- Used synthetic provider tests: live account/provider differences remain for a configured smoke test.
+- Verified Docker separately from native operation, including SQLite persistence across container replacement.
+- Kept default provider tests synthetic and offline; separately verified live weather with the configured account through the native and Docker APIs and the headed browser workflow.
 - Preserve accepted writes for their original city even after navigation: cancellation does not roll back committed notes; README explains this.
 - Retained approved scope: authentication, exhaustive locations, note retrieval and multi-instance deployment need separate work if required.
 - Kept the branch without merge/publication: GitHub delivery is pending a target repository.

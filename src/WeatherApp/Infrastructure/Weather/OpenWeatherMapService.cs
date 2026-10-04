@@ -50,7 +50,9 @@ public sealed class OpenWeatherMapService(HttpClient client, IOptions<OpenWeathe
         var direction = wind.TryGetProperty("deg", out var degrees) ? degrees.GetInt32() : speed == 0 ? 0 : throw new JsonException();
         var visibility = root.GetProperty("visibility").GetInt32();
         if (direction is < 0 or > 360 || visibility < 0) throw new JsonException();
-        var sky = root.GetProperty("weather")[0].GetProperty("main").GetString();
+        var conditions = root.GetProperty("weather");
+        if (conditions.ValueKind != JsonValueKind.Array || conditions.GetArrayLength() == 0) throw new JsonException();
+        var sky = conditions[0].GetProperty("main").GetString();
         var country = root.GetProperty("sys").GetProperty("country").GetString();
         if (string.IsNullOrWhiteSpace(sky) || !countryCode.Equals(country, StringComparison.OrdinalIgnoreCase)) throw new JsonException();
         var observed = DateTimeOffset.FromUnixTimeSeconds(root.GetProperty("dt").GetInt64());

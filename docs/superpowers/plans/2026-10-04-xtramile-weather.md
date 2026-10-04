@@ -50,11 +50,11 @@ Use camelCase JSON and these C# contracts in Application:
 
 **Interfaces:** Produces temperature conversion `Temperature.ToCelsius(double fahrenheit)`, domain notes, catalog contracts, query DTOs/handlers, and `ValidationBehavior<TRequest,TResponse>`.
 
-- [ ] Write domain theories asserting `ToCelsius(32)==0`, `ToCelsius(212)==100`, `ToCelsius(-40)==-40`, `ToCelsius(-4)==-20`, and `ToCelsius(98.6)` approximately 37. Test note invariants and trimming. Write isolated location-handler tests against fake catalog results and invalid/unknown country handling.
-- [ ] Run `dotnet test WeatherApp.slnx --filter "FullyQualifiedName~DomainTests|FullyQualifiedName~LocationQueryTests|FullyQualifiedName~ValidationTests"`. Expected: missing domain/handler types or failing assertions before implementation.
-- [ ] Implement contracts and handlers, validation pipeline, and deterministic catalog specified by the spec. Add MediatR/FluentValidation references and register no product HTTP behavior yet. `AGENTS.md` records boundaries, CQRS conventions, naming, security rules, and verification commands from this plan.
-- [ ] Run the same filtered tests. Expected: all pass, with no live network calls.
-- [ ] Commit only this task's source/tests/configuration and ledger result: `feat: add domain and location CQRS queries`.
+- [x] Write domain theories asserting `ToCelsius(32)==0`, `ToCelsius(212)==100`, `ToCelsius(-40)==-40`, `ToCelsius(-4)==-20`, and `ToCelsius(98.6)` approximately 37. Test note invariants and trimming. Write isolated location-handler tests against fake catalog results and invalid/unknown country handling.
+- [x] Run `dotnet test WeatherApp.slnx --filter "FullyQualifiedName~DomainTests|FullyQualifiedName~LocationQueryTests|FullyQualifiedName~ValidationTests"`. Expected: missing domain/handler types or failing assertions before implementation.
+- [x] Implement contracts and handlers, validation pipeline, and deterministic catalog specified by the spec. Add MediatR/FluentValidation references and register no product HTTP behavior yet. `AGENTS.md` records boundaries, CQRS conventions, naming, security rules, and verification commands from this plan.
+- [x] Run the same filtered tests. Expected: all pass, with no live network calls.
+- [x] Commit only this task's source/tests/configuration and ledger result: `feat: add domain and location CQRS queries`.
 
 ### Task 2: Current weather query and provider adapter
 
@@ -62,12 +62,12 @@ Use camelCase JSON and these C# contracts in Application:
 
 **Interfaces:** Consumes catalog, DTOs, validators, temperature conversion. Produces weather query handler and `IWeatherService` implementation using a typed HttpClient.
 
-- [ ] Write handler tests using fake IWeatherService: canonical selected location reaches the provider, missing selection returns 404, dependency errors propagate, and cancellation reaches the dependency. Adapter tests use a fake HttpMessageHandler and synthetic JSON only. Assert 68 F -> 20 C, observation time from Unix seconds with zero UTC offset, country/city mapping, mph -> m/s, and every payload metric.
-- [ ] Add adapter cases for missing temperature, invalid humidity outside 0..100, malformed JSON, provider 404/401/429/500, timeout, and cancellation. At 20 C and 50% humidity calculated dew point is approximately 9.26 C; at 0% humidity it is null and never NaN/Infinity.
-- [ ] Run `dotnet test WeatherApp.slnx --filter "FullyQualifiedName~WeatherQueryTests|FullyQualifiedName~WeatherAdapterTests"`. Expected: failure before implementation.
-- [ ] Implement OpenWeatherMap current-weather requests over HTTPS with imperial units, safely encoded city/country, runtime configuration, 10-second timeout, and validated payload mapping. Use Magnus dew-point calculation with constants 17.62 and 243.12; preserve request cancellation. Provider/configuration errors must not expose secrets. The API layer later translates errors into 503 for unavailable configuration, 504 for timeout, and 502 for upstream failures.
-- [ ] Run the filtered tests. Expected: all pass offline.
-- [ ] Commit: `feat: add validated weather provider and query`.
+- [x] Write handler tests using fake IWeatherService: canonical selected location reaches the provider, missing selection returns 404, dependency errors propagate, and cancellation reaches the dependency. Adapter tests use a fake HttpMessageHandler and synthetic JSON only. Assert 68 F -> 20 C, observation time from Unix seconds with zero UTC offset, country/city mapping, mph -> m/s, and every payload metric.
+- [x] Add adapter cases for missing temperature, invalid humidity outside 0..100, malformed JSON, provider 404/401/429/500, timeout, and cancellation. At 20 C and 50% humidity calculated dew point is approximately 9.26 C; at 0% humidity it is null and never NaN/Infinity.
+- [x] Run `dotnet test WeatherApp.slnx --filter "FullyQualifiedName~WeatherQueryTests|FullyQualifiedName~WeatherAdapterTests"`. Expected: failure before implementation.
+- [x] Implement OpenWeatherMap current-weather requests over HTTPS with imperial units, safely encoded city/country, runtime configuration, 10-second timeout, and validated payload mapping. Use Magnus dew-point calculation with constants 17.62 and 243.12; preserve request cancellation. Provider/configuration errors must not expose secrets. The API layer later translates errors into 503 for unavailable configuration, 504 for timeout, and 502 for upstream failures.
+- [x] Run the filtered tests. Expected: all pass offline.
+- [x] Commit: `feat: add validated weather provider and query`.
 
 ### Task 3: Note persistence and API integration
 
@@ -75,12 +75,12 @@ Use camelCase JSON and these C# contracts in Application:
 
 **Interfaces:** Consumes all prior CQRS contracts. Produces POST note command handler, durable SQLite repository, required GET/POST routes, Problem Details, and `public partial class Program` for WebApplicationFactory.
 
-- [ ] Write command tests with isolated EF In-Memory stores: valid Jakarta/ID note gets a nonempty Guid and UTC timestamp; a fresh context finds the trimmed text and canonical location. Blank/overlong notes and unknown cities produce no insert. Use TimeProvider injection for deterministic timestamps.
-- [ ] Write API tests substituting fake weather and isolated SQLite: all required GETs return expected DTOs; invalid input returns 400, unknown catalog location 404, provider failure 502, missing configuration 503, timeout 504, POST returns 201 and a persisted identifier. Verify `/api/missing` is JSON 404 and never SPA content. Cover `/api/weather/Jakarta` without countryCode and malformed POST JSON.
-- [ ] Run `dotnet test WeatherApp.slnx --filter "FullyQualifiedName~NoteCommandTests|FullyQualifiedName~ApiTests"`. Expected: failure before implementation.
-- [ ] Implement thin routes through ISender, validation/error translation, scoped persistence, startup initialization, and cancellation. Initialize the bounded SQLite schema with EnsureCreated; document that future schema evolution needs a migration strategy. Default DB file is `data/weather.db`; create its directory. Static frontend hosting must preserve API errors. Explicitly use AsNoTracking in persistence read paths.
-- [ ] Run filtered tests and `dotnet test WeatherApp.slnx -c Release`. Expected: all backend tests pass offline.
-- [ ] Commit: `feat: persist notes and expose weather API`.
+- [x] Write command tests with isolated EF In-Memory stores: valid Jakarta/ID note gets a nonempty Guid and UTC timestamp; a fresh context finds the trimmed text and canonical location. Blank/overlong notes and unknown cities produce no insert. Use TimeProvider injection for deterministic timestamps.
+- [x] Write API tests substituting fake weather and isolated SQLite: all required GETs return expected DTOs; invalid input returns 400, unknown catalog location 404, provider failure 502, missing configuration 503, timeout 504, POST returns 201 and a persisted identifier. Verify `/api/missing` is JSON 404 and never SPA content. Cover `/api/weather/Jakarta` without countryCode and malformed POST JSON.
+- [x] Run `dotnet test WeatherApp.slnx --filter "FullyQualifiedName~NoteCommandTests|FullyQualifiedName~ApiTests"`. Expected: failure before implementation.
+- [x] Implement thin routes through ISender, validation/error translation, scoped persistence, startup initialization, and cancellation. Initialize the bounded SQLite schema with EnsureCreated; document that future schema evolution needs a migration strategy. Default DB file is `data/weather.db`; create its directory. Static frontend hosting must preserve API errors. Explicitly use AsNoTracking in persistence read paths.
+- [x] Run filtered tests and `dotnet test WeatherApp.slnx -c Release`. Expected: all backend tests pass offline.
+- [x] Commit: `feat: persist notes and expose weather API`.
 
 ### Task 4: React TypeScript client
 
@@ -88,12 +88,12 @@ Use camelCase JSON and these C# contracts in Application:
 
 **Interfaces:** Consumes Task 3 camelCase HTTP contracts; typed frontend interfaces mirror shared DTOs. Vite proxies `/api` to `http://localhost:5000`. Scripts: dev, lint, test, build (type check then Vite), and test:e2e.
 
-- [ ] Establish the toolchain and write React tests with mocked fetch: load/select country and city, render every weather metric, save note with exact POST shape, show returned identifier, render API failures, reset selections, and suppress stale requests and duplicate saves. Test changing location during note saving so old feedback does not appear for the new location.
-- [ ] Run `npm run test -- --run` from frontend. Expected: missing/unimplemented components cause failure.
-- [ ] Implement accessible responsive components, API parsing, AbortController/request identity handling, disabled states, and honest missing-weather/error display. Keep API types explicit and no secret in the frontend. Show null dew point as unavailable and mark calculated values.
-- [ ] Add Playwright browser workflow tests with route-intercepted API payloads for success, provider failure, and invalid note feedback. Start Vite through Playwright webServer; no backend/provider access is needed.
-- [ ] Run frontend lint, unit tests, build, and browser tests. Expected: all pass; TypeScript build succeeds; e2e makes no external calls.
-- [ ] Commit: `feat: add React TypeScript weather client`.
+- [x] Establish the toolchain and write React tests with mocked fetch: load/select country and city, render every weather metric, save note with exact POST shape, show returned identifier, render API failures, reset selections, and suppress stale requests and duplicate saves. Test changing location during note saving so old feedback does not appear for the new location.
+- [x] Run `npm run test -- --run` from frontend. Expected: missing/unimplemented components cause failure.
+- [x] Implement accessible responsive components, API parsing, AbortController/request identity handling, disabled states, and honest missing-weather/error display. Keep API types explicit and no secret in the frontend. Show null dew point as unavailable and mark calculated values.
+- [x] Add Playwright browser workflow tests with route-intercepted API payloads for success, provider failure, and invalid note feedback. Start Vite through Playwright webServer; no backend/provider access is needed.
+- [x] Run frontend lint, unit tests, build, and browser tests. Expected: all pass; TypeScript build succeeds; e2e makes no external calls.
+- [x] Commit: `feat: add React TypeScript weather client`.
 
 ### Task 5: Docker, CI, documentation, and final verification
 
@@ -101,14 +101,14 @@ Use camelCase JSON and these C# contracts in Application:
 
 **Interfaces:** Consumes published .NET app and frontend/dist. Produces one runtime container on port 8080, frontend at `/`, SQLite at `/app/data/weather.db`, and named volume `weather-data` mounted at `/app/data`. Compose maps host 8080 to container 8080 and supplies OpenWeatherMap__ApiKey from the environment.
 
-- [ ] Implement a multi-stage Docker build using Node 22 and .NET 10 SDK/runtime images, copying frontend/dist to published wwwroot. Run under the image's nonroot app user with a writable DB directory. Never bake credentials into images.
-- [ ] Write README sections for assessment 4/5/6, Onion/CQRS diagrams and traces, exact setup/build/test/run commands, API payloads, catalog coverage, units/calculated dew point, persistence/EnsureCreated limitations, runtime configuration, Docker, and AGENTS.md.
-- [ ] Implement GitHub Actions with dependency setup, .NET Release build/tests, npm ci, lint/unit/build/browser checks, and Chromium installation. Implement scripts/verify.ps1 to run the same local checks and stop on failures. CI does not require a weather key.
-- [ ] Run `dotnet build WeatherApp.slnx -c Release` and `dotnet test WeatherApp.slnx -c Release`; run frontend `npm run lint`, `npm run test -- --run`, `npm run build`, `npm run test:e2e`. Expected: every check passes.
+- [x] Implement a multi-stage Docker build using Node 22 and .NET 10 SDK/runtime images, copying frontend/dist to published wwwroot. Run under the image's nonroot app user with a writable DB directory. Never bake credentials into images.
+- [x] Write README sections for assessment 4/5/6, Onion/CQRS diagrams and traces, exact setup/build/test/run commands, API payloads, catalog coverage, units/calculated dew point, persistence/EnsureCreated limitations, runtime configuration, Docker, and AGENTS.md.
+- [x] Implement GitHub Actions with dependency setup, .NET Release build/tests, npm ci, lint/unit/build/browser checks, and Chromium installation. Implement scripts/verify.ps1 to run the same local checks and stop on failures. CI does not require a weather key.
+- [x] Run `dotnet build WeatherApp.slnx -c Release` and `dotnet test WeatherApp.slnx -c Release`; run frontend `npm run lint`, `npm run test -- --run`, `npm run build`, `npm run test:e2e`. Expected: every check passes.
 - [ ] Run `docker compose config`, `docker compose up --build -d`, and a local smoke check: `/` serves React; `/api/countries` returns the catalog; create a note, replace the container without deleting the named volume, and verify the row persists using EF/SQLite inspection. Without a key weather returns the documented configuration error. Expected: build/startup and persistence succeed. Report Docker daemon unavailability if the environment prevents this check; do not claim it passed.
-- [ ] Commit: `build: add Docker delivery CI and assessment documentation`.
-- [ ] Perform one fresh whole-change code review with Superpowers requesting-code-review, address important findings with regression tests, and rerun affected checks. Record evidence in the progress ledger.
-- [ ] Leave the implementation on `feature/xtramile-weather` for user review. No merge or GitHub publication is authorized by this plan. Obtain the target repository when publishing is requested.
+- [x] Commit: `build: add Docker delivery CI and assessment documentation`.
+- [x] Perform one fresh whole-change code review with Superpowers requesting-code-review, address important findings with regression tests, and rerun affected checks. Record evidence in the progress ledger.
+- [x] Leave the implementation on `feature/xtramile-weather` for user review. No merge or GitHub publication is authorized by this plan. Obtain the target repository when publishing is requested.
 
 ## Execution handoff
 

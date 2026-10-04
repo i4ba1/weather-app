@@ -57,6 +57,14 @@ public class WeatherAdapterTests
     public async Task RejectsImpossibleHumidity(int humidity) =>
         await Assert.ThrowsAsync<WeatherServiceException>(() => JsonService(Payload.Replace("\"humidity\":50", $"\"humidity\":{humidity}")).GetCurrentAsync("Jakarta", "ID", default));
 
+    [Fact]
+    public async Task EmptySkyConditionsAreAControlledUpstreamFailure()
+    {
+        var payload = Payload.Replace("[{\"main\":\"Clear\"}]", "[]");
+        var error = await Assert.ThrowsAsync<WeatherServiceException>(() => JsonService(payload).GetCurrentAsync("Jakarta", "ID", default));
+        Assert.Equal(WeatherFailure.Upstream, error.Failure);
+    }
+
     [Theory]
     [InlineData(401)]
     [InlineData(404)]

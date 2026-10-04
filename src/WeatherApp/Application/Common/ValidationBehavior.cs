@@ -13,6 +13,6 @@ public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidat
         foreach (var validator in validators)
             failures.AddRange((await validator.ValidateAsync(context, cancellationToken)).Errors);
         if (failures.Count > 0) throw new ValidationException(failures);
-        return await next();
+        return await next(cancellationToken);
     }
 }

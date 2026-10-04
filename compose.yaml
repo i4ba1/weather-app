@@ -1,0 +1,17 @@
+services:
+  weather:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      OpenWeatherMap__ApiKey: ${OPENWEATHERMAP_API_KEY:-}
+      ConnectionStrings__Weather: "Data Source=/app/data/weather.db"
+    volumes:
+      - weather-data:/app/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  weather-data:

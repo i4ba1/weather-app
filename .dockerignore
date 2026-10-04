@@ -1,0 +1,16 @@
+.git
+.superpowers
+.worktrees
+**/bin
+**/obj
+**/node_modules
+**/data
+frontend/dist
+**/test-results
+**/playwright-report
+**/coverage
+**/*.db*
+.env
+.env.*
+*.pdf
+tests

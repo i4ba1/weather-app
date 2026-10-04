@@ -79,7 +79,7 @@ Add a root-level `AGENTS.md` as the project AI instructions file. It must define
 
 Document naming conventions: PascalCase C# types; `*Query`, `*Command`, `*Handler`, `*Validator`, and `*Dto` suffixes; `I*` application interfaces; React components in PascalCase `.tsx` files and non-component TypeScript modules in `.ts` files; and feature-based organization. Include the exact build/test commands and rules against committing credentials or presenting fake readings as live weather.
 
-Use Superpowers for execution: write an implementation plan with exact interfaces and acceptance tests, implement tasks with the executing-plans workflow and TDD, keep a progress ledger, run verification commands, and perform a final code review. Codex edits the backend, frontend, tests, documentation, and CI configuration using filesystem and shell tools. These tools run during implementation; a planning document alone is not the completed deliverable. Execution has not started yet.
+Use Superpowers for execution: write an implementation plan with exact interfaces and acceptance tests, implement tasks with the executing-plans workflow and TDD, keep a progress ledger, run verification commands, and perform a final code review. Codex edits the backend, frontend, tests, documentation, and CI configuration using filesystem and shell tools. These tools run during implementation; a planning document alone is not the completed deliverable. Execution evidence is recorded in the progress ledger and final handoff.
 
 ## Assessment section 6: documentation and deliverables
 

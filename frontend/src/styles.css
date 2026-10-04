@@ -1,0 +1,58 @@
+:root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; color: #172b40; background: #f2f5f6; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, select, textarea { font: inherit; }
+button, select, a { -webkit-tap-highlight-color: transparent; }
+a { color: inherit; }
+.app-shell { max-width: 1240px; margin: auto; padding: 0 48px; }
+.site-header { display: flex; justify-content: space-between; align-items: center; padding: 30px 0; border-bottom: 1px solid #d8e0e4; }
+.brand { display: flex; align-items: center; gap: 9px; text-decoration: none; font-weight: 800; font-size: 20px; letter-spacing: -.5px; }
+.brand > span:first-child { color: #cc743d; font-size: 29px; }
+.brand-light { color: #647789; font-weight: 400; }
+.header-note { font-size: 13px; color: #637487; }
+.intro { padding: 56px 0 38px; }
+.eyebrow { text-transform: uppercase; letter-spacing: 2px; font-size: 11px; font-weight: 700; color: #758698; }
+h1 { font-size: clamp(36px, 5vw, 60px); letter-spacing: -2.5px; line-height: 1.08; margin: 16px 0; }
+.intro > p:last-child { color: #617383; font-size: 16px; }
+.dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.controls { display: grid; gap: 20px; }
+.card { background: white; border: 1px solid #e1e7eb; border-radius: 18px; padding: 28px; }
+h2 { margin: 8px 0 10px; font-size: 21px; letter-spacing: -.5px; }
+.muted { color: #697b8a; font-size: 13px; line-height: 1.6; }
+.section-number { color: #b47c50; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+.selectors { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 23px 0 16px; }
+label { display: block; font-size: 13px; font-weight: 650; }
+select, textarea { width: 100%; margin-top: 8px; padding: 12px; color: #172b40; background: #f8fafb; border: 1px solid #cfdbe2; border-radius: 8px; }
+select { min-height: 46px; }
+textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
+select:disabled, textarea:disabled { color: #6b7d8b; background: #edf1f3; }
+.catalog-note { font-size: 11px; line-height: 1.7; color: #6d7c88; margin-bottom: 0; }
+.form-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; gap: 12px; }
+button { padding: 11px 20px; color: white; background: #18374e; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+button:hover:enabled { background: #275672; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+:focus-visible { outline: 3px solid #b8763d; outline-offset: 3px; }
+.error, .success { padding: 12px 14px; border-radius: 8px; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+.error { background: #fff1ec; color: #983a1c; }
+.success { background: #eaf6ee; color: #25663d; }
+.empty-state { min-height: 456px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: #e7eef1; border-color: #dbe5ea; }
+.empty-state > p { max-width: 290px; font-size: 14px; color: #5c7182; line-height: 1.6; }
+.empty-state > .error { color: #983a1c; }
+.empty-symbol { color: #8fa8b8; font-size: 90px; margin-bottom: 14px; }
+.weather-card { background: #102c43; color: #f3f7fa; border: none; padding: 34px; }
+.weather-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.weather-card h2 { font-size: 32px; margin: 9px 0; }
+.weather-card .eyebrow { color: #a9bfce; }
+.sky { margin: 0; color: #cad8e2; }
+.weather-symbol { font-size: 68px; color: #e9b875; }
+.temperature { display: flex; align-items: baseline; gap: 15px; padding: 32px 0; }
+.temperature strong { font-size: clamp(36px, 4vw, 55px); font-weight: 500; letter-spacing: -2px; }
+.temperature span { color: #a9bfce; font-size: 19px; }
+.metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 20px; border-top: 1px solid #315067; padding-top: 28px; margin: 0; }
+dt { font-size: 12px; color: #a9bfce; }
+dd { margin: 8px 0 0; font-size: 21px; }
+.observation { border-top: 1px solid #315067; padding-top: 22px; margin-top: 27px; font-size: 11px; color: #a9bfce; line-height: 1.7; }
+.observation time { display: block; }
+footer { padding: 32px 0; font-size: 11px; color: #6a7c8b; }
+@media (max-width: 780px) { .app-shell { padding: 0 22px; } .header-note { display: none; } .dashboard { grid-template-columns: 1fr; } .conditions { grid-row: 1; } .intro { padding-top: 36px; } .empty-state { min-height: 240px; } .card { padding: 23px; } }
+@media (max-width: 400px) { .selectors { grid-template-columns: 1fr; } .brand { font-size: 17px; } .temperature { gap: 10px; } }

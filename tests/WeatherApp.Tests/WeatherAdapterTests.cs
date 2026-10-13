@@ -7,6 +7,17 @@ namespace WeatherApp.Tests;
 
 public class WeatherAdapterTests
 {
+    [Theory]
+    [InlineData(401, false)]
+    [InlineData(404, false)]
+    [InlineData(429, true)]
+    [InlineData(503, true)]
+    public async Task OnlyTransientHttpFailuresAreRetryable(int status, bool expected)
+    {
+        var error = await Assert.ThrowsAsync<WeatherServiceException>(() =>
+            Service((_, _) => Task.FromResult(new HttpResponseMessage((HttpStatusCode)status))).GetCurrentAsync("Jakarta", "ID", default));
+        Assert.Equal(expected, error.IsTransient);
+    }
     internal const string Payload = """
         {"name":"Jakarta","sys":{"country":"ID"},"dt":1700000000,"main":{"temp":68,"pressure":1013,"humidity":50},"wind":{"speed":10,"deg":180},"visibility":10000,"weather":[{"main":"Clear"}]}
         """;

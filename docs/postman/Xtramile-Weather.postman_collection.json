@@ -1,0 +1,518 @@
+{
+  "info": {
+    "_postman_id": "b92db8fb-ec6e-4614-939c-085e9e148a7f",
+    "name": "Xtramile Weather API",
+    "description": "Import and select Docker or Native environment. Default baseUrl is http://localhost:8080. All four API endpoints plus six validation/error examples. Run the API workflow in order. Weather needs an active backend key; never store it here. A successful note POST creates a persistent row. createdNoteId/createdNoteAtUtc are saved as collection variables; no GET note endpoint exists. All tests execute only when you send requests or explicitly run this collection; this collection is not part of offline CI.\nBackground refresh extension: requests 05/06 persist jobs and poll safe per-city results. Configure the API key only on the backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "countryCode",
+      "value": "ID",
+      "type": "string"
+    },
+    {
+      "key": "cityName",
+      "value": "Jakarta",
+      "type": "string"
+    },
+    {
+      "key": "noteText",
+      "value": "Postman sample note: warm and breezy in Jakarta.",
+      "type": "string"
+    },
+    {
+      "key": "createdNoteId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "createdNoteAtUtc",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshJobId",
+      "value": "00000000-0000-0000-0000-000000000000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "API workflow",
+      "item": [
+        {
+          "name": "01 - Get countries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/countries",
+            "description": "Returns all five countries in the bundled catalog. No weather key required."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"JSON response\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"json\"); });",
+                  "pm.test(\"Country list includes selected country\", function () {",
+                  "  const countries = pm.response.json();",
+                  "  pm.expect(countries).to.be.an(\"array\");",
+                  "  pm.expect(countries.some(c => c.code === pm.variables.get(\"countryCode\"))).to.be.true;",
+                  "  countries.forEach(c => { pm.expect(c.code).to.match(/^[A-Z]{2}$/); pm.expect(c.name).to.be.a(\"string\"); });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "02 - Get cities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/countries/{{countryCode}}/cities",
+            "description": "Returns catalog cities for the configured country. Default: ID / Jakarta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"JSON response\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"json\"); });",
+                  "pm.test(\"City list includes selected city\", function () {",
+                  "  const cities = pm.response.json();",
+                  "  pm.expect(cities).to.be.an(\"array\");",
+                  "  pm.expect(cities.some(c => c.name === pm.variables.get(\"cityName\"))).to.be.true;",
+                  "  cities.forEach(c => pm.expect(c.countryCode).to.eql(pm.variables.get(\"countryCode\")));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "03 - Get current weather",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/weather/{{cityName}}?countryCode={{countryCode}}",
+            "description": "Makes a real weather lookup through the backend. Requires an active server-side OpenWeatherMap key. Without configuration/provider availability, 503/502/504 is possible and the expected-200 assertion fails. Temperatures are dynamic; tests check contracts and conversion rather than fixed readings."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"JSON response\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"json\"); });",
+                  "pm.test(\"Weather contract and selected location\", function () {",
+                  "  const weather = pm.response.json();",
+                  "  pm.expect(weather.city).to.eql(pm.variables.get(\"cityName\"));",
+                  "  pm.expect(weather.countryCode).to.eql(pm.variables.get(\"countryCode\"));",
+                  "  [\"temperatureCelsius\", \"temperatureFahrenheit\", \"windSpeedMetersPerSecond\", \"windDirectionDegrees\", \"visibilityMeters\", \"pressureHpa\", \"relativeHumidityPercent\"].forEach(key => {",
+                  "    pm.expect(weather[key], key).to.be.a(\"number\");",
+                  "    pm.expect(Number.isFinite(weather[key]), key + \" must be finite\").to.be.true;",
+                  "  });",
+                  "  pm.expect(weather.relativeHumidityPercent).to.be.within(0, 100);",
+                  "  pm.expect(weather.windSpeedMetersPerSecond).to.be.at.least(0);",
+                  "  pm.expect(weather.windDirectionDegrees).to.be.within(0, 360);",
+                  "  pm.expect(weather.visibilityMeters).to.be.at.least(0);",
+                  "  pm.expect(weather.pressureHpa).to.be.within(1, 1200);",
+                  "  pm.expect(weather.skyConditions).to.be.a(\"string\").and.not.empty;",
+                  "  pm.expect(Number.isNaN(Date.parse(weather.observedAtUtc))).to.be.false;",
+                  "  pm.expect(weather.dewPointIsCalculated).to.be.a(\"boolean\");",
+                  "  if (weather.dewPointCelsius !== null) pm.expect(weather.dewPointCelsius).to.be.a(\"number\");",
+                  "  pm.expect(weather.temperatureCelsius).to.be.closeTo((weather.temperatureFahrenheit - 32) * 5 / 9, 0.000001);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "04 - Create weather note",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/weather/notes",
+            "description": "Persists a real note for the selected catalog city; weather lookup success is not required. The pre-request script safely builds noteBody from cityName/countryCode/noteText, including quotes/newlines. Edit noteText in collection/environment variables. Saves the returned ID/time in collection variables. There is no note-read API.",
+            "body": {
+              "mode": "raw",
+              "raw": "{{noteBody}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set(\"noteBody\", JSON.stringify({",
+                  "  cityName: pm.variables.get(\"cityName\"),",
+                  "  countryCode: pm.variables.get(\"countryCode\"),",
+                  "  text: pm.variables.get(\"noteText\")",
+                  "}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+                  "pm.test(\"JSON response\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"json\"); });",
+                  "pm.test(\"Created note acknowledgement\", function () {",
+                  "  const created = pm.response.json();",
+                  "  pm.expect(created.id).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);",
+                  "  pm.expect(Number.isNaN(Date.parse(created.createdAtUtc))).to.be.false;",
+                  "  pm.collectionVariables.set(\"createdNoteId\", created.id);",
+                  "  pm.collectionVariables.set(\"createdNoteAtUtc\", created.createdAtUtc);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "05 Create refresh job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/weather/refresh-jobs",
+            "description": "Persists a real multi-city background job. Workers call the backend-configured provider. Saves refreshJobId; poll request 06 until terminal status. Jobs survive browser closure/restart.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cities\": [\n    {\n      \"cityName\": \"Jakarta\",\n      \"countryCode\": \"ID\"\n    },\n    {\n      \"cityName\": \"Bandung\",\n      \"countryCode\": \"ID\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Accepted after persistence\", () => pm.response.to.have.status(202));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Job identifier and status location\", () => {",
+                  "  pm.expect(body.id).to.match(/^[0-9a-f-]{36}$/i);",
+                  "  pm.expect(pm.response.headers.get(\"Location\")).to.include(\"/api/weather/refresh-jobs/\" + body.id);",
+                  "});",
+                  "if (pm.response.code === 202 && body.id) pm.collectionVariables.set(\"refreshJobId\", body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 Get refresh job",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/weather/refresh-jobs/{{refreshJobId}}",
+            "description": "Read-only persisted job snapshot. Repeat manually until Completed, Failed or CompletedWithErrors. A found job returns 200 even if provider calls failed; inspect cities[].error. No synthetic weather is supplied."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Found persisted job\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Job and per-city states\", () => {",
+                  "  pm.expect(body.id).to.equal(pm.variables.get(\"refreshJobId\"));",
+                  "  pm.expect(body.status).to.be.oneOf([\"Pending\", \"Running\", \"Completed\", \"Failed\", \"CompletedWithErrors\"]);",
+                  "  pm.expect(body.cities).to.be.an(\"array\").that.is.not.empty;",
+                  "  for (const city of body.cities) {",
+                  "    pm.expect(city.status).to.be.oneOf([\"Pending\", \"Running\", \"Completed\", \"Failed\"]);",
+                  "    pm.expect(city.attempts).to.be.a(\"number\");",
+                  "    if (city.status === \"Completed\") pm.expect(city.weather.city).to.equal(city.cityName);",
+                  "    if (city.status === \"Failed\") { pm.expect(city.weather).to.equal(null); pm.expect(city.error).to.be.a(\"string\"); }",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Validation and error examples",
+      "item": [
+        {
+          "name": "Invalid country format - 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/countries/USA/cities",
+            "description": "Three-letter code fails country validation."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"JSON response\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"json\"); });",
+                  "pm.test(\"Problem Details HTTP 400\", function () {",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "  const problem = pm.response.json();",
+                  "  pm.expect(problem.status).to.eql(400);",
+                  "  pm.expect(problem.title).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "pm.test(\"Field validation errors\", function () { pm.expect(pm.response.json().errors).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Unsupported country - 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/countries/XX/cities",
+            "description": "XX has valid format but is not in the catalog."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"JSON response\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"json\"); });",
+                  "pm.test(\"Problem Details HTTP 404\", function () {",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "  const problem = pm.response.json();",
+                  "  pm.expect(problem.status).to.eql(404);",
+                  "  pm.expect(problem.title).to.be.a(\"string\").and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Unknown city - 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/weather/NotInCatalog?countryCode=ID",
+            "description": "Fails catalog resolution before contacting the weather provider."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"JSON response\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"json\"); });",
+                  "pm.test(\"Problem Details HTTP 404\", function () {",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "  const problem = pm.response.json();",
+                  "  pm.expect(problem.status).to.eql(404);",
+                  "  pm.expect(problem.title).to.be.a(\"string\").and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Missing weather country - 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/weather/Jakarta",
+            "description": "Missing query-string country fails validation before provider lookup."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"JSON response\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"json\"); });",
+                  "pm.test(\"Problem Details HTTP 400\", function () {",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "  const problem = pm.response.json();",
+                  "  pm.expect(problem.status).to.eql(400);",
+                  "  pm.expect(problem.title).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "pm.test(\"Field validation errors\", function () { pm.expect(pm.response.json().errors).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Blank note - 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/weather/notes",
+            "description": "Rejects blank note text and must not save a row.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cityName\": \"Jakarta\",\n  \"countryCode\": \"ID\",\n  \"text\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+                  "pm.test(\"JSON response\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"json\"); });",
+                  "pm.test(\"Problem Details HTTP 400\", function () {",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "  const problem = pm.response.json();",
+                  "  pm.expect(problem.status).to.eql(400);",
+                  "  pm.expect(problem.title).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "pm.test(\"Field validation errors\", function () { pm.expect(pm.response.json().errors).to.be.an(\"object\"); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Unknown API route - 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/not-a-route",
+            "description": "Returns JSON Problem Details rather than the React page."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+                  "pm.test(\"JSON response\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"json\"); });",
+                  "pm.test(\"Problem Details HTTP 404\", function () {",
+                  "  pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "  const problem = pm.response.json();",
+                  "  pm.expect(problem.status).to.eql(404);",
+                  "  pm.expect(problem.title).to.be.a(\"string\").and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ]
+}

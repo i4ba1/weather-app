@@ -4,6 +4,7 @@ import type { CityDto, CountryDto, WeatherDto } from './api/types';
 import { LocationSelector } from './components/LocationSelector';
 import { WeatherDetails } from './components/WeatherDetails';
 import { NoteForm } from './components/NoteForm';
+import { WeatherRefreshPanel } from './components/WeatherRefreshPanel';
 
 export default function App() {
   const [countries, setCountries] = useState<CountryDto[]>([]);
@@ -70,6 +71,7 @@ export default function App() {
             <p>{weatherError ? 'Try another city or come back in a moment.' : 'Choose a destination to see its current conditions.'}</p>
             {weatherError && <p role="alert" className="error">{weatherError}</p>}</section>}
       </div></div>
+      <WeatherRefreshPanel cities={cities} loading={countriesLoading || citiesLoading} />
     </main>
     <footer>Weather observations from OpenWeatherMap · Times shown in UTC</footer>
   </div>;

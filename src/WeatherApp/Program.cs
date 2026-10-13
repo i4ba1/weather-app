@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using WeatherApp.API;
 using WeatherApp.Infrastructure;
 using WeatherApp.Infrastructure.Persistence;
 
+/*Creates WebApplicationBuilder using command-line arguments and standard host/configuration defaults. builder.Configuration supplies configuration; builder.Environment supplies environment / content - root information; builder.Services is the dependency - registration collection.
+ * */
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddWeatherApplication(builder.Configuration, builder.Environment);
 builder.Services.AddProblemDetails();
@@ -11,7 +14,7 @@ builder.Services.Configure<RouteHandlerOptions>(options => options.ThrowOnBadReq
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
-    await scope.ServiceProvider.GetRequiredService<WeatherDbContext>().Database.EnsureCreatedAsync();
+    await WeatherDatabaseInitializer.InitializeAsync(scope.ServiceProvider.GetRequiredService<WeatherDbContext>());
 
 app.UseExceptionHandler();
 app.UseStatusCodePages(async context =>

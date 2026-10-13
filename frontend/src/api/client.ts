@@ -1,4 +1,4 @@
-import type { CityDto, CountryDto, CreatedNoteDto, CreateNoteCommand, ProblemDetails, WeatherDto } from './types';
+import type { AcceptedRefreshJobDto, CreateRefreshJobCommand, RefreshJobDto, CityDto, CountryDto, CreatedNoteDto, CreateNoteCommand, ProblemDetails, WeatherDto } from './types';
 
 async function request<T>(url: string, init: RequestInit): Promise<T> {
   let response: Response;
@@ -19,6 +19,10 @@ async function request<T>(url: string, init: RequestInit): Promise<T> {
 }
 
 export const api = {
+  createRefreshJob: (command: CreateRefreshJobCommand, signal: AbortSignal) => request<AcceptedRefreshJobDto>('/api/weather/refresh-jobs', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(command), signal,
+  }),
+  refreshJob: (id: string, signal: AbortSignal) => request<RefreshJobDto>(`/api/weather/refresh-jobs/${encodeURIComponent(id)}`, { signal }),
   countries: (signal: AbortSignal) => request<CountryDto[]>('/api/countries', { signal }),
   cities: (country: string, signal: AbortSignal) => request<CityDto[]>(`/api/countries/${encodeURIComponent(country)}/cities`, { signal }),
   weather: (city: string, country: string, signal: AbortSignal) => request<WeatherDto>(`/api/weather/${encodeURIComponent(city)}?countryCode=${encodeURIComponent(country)}`, { signal }),

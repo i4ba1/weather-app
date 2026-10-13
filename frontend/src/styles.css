@@ -56,3 +56,11 @@ dd { margin: 8px 0 0; font-size: 21px; }
 footer { padding: 32px 0; font-size: 11px; color: #6a7c8b; }
 @media (max-width: 780px) { .app-shell { padding: 0 22px; } .header-note { display: none; } .dashboard { grid-template-columns: 1fr; } .conditions { grid-row: 1; } .intro { padding-top: 36px; } .empty-state { min-height: 240px; } .card { padding: 23px; } }
 @media (max-width: 400px) { .selectors { grid-template-columns: 1fr; } .brand { font-size: 17px; } .temperature { gap: 10px; } }
+/* Background refresh remains distinct from the currently selected city. */
+.refresh-card { margin-top: 1.5rem; }
+.refresh-card h2 { margin-top: 0; }
+.refresh-progress { margin-top: 1rem; }
+.refresh-progress code { overflow-wrap: anywhere; }
+.refresh-progress ul { padding-left: 1.25rem; }
+.refresh-progress li { margin: .8rem 0; }
+.refresh-card button { margin: .25rem .5rem .25rem 0; }

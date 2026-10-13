@@ -1,0 +1,10 @@
+{
+  "description": "Synthetic provider fixtures for the headed real-API channel recording. No live weather or external HTTP. API, MediatR, adapter mapping, workers and SQLite are real.",
+  "observedAtUtc": "2023-11-14T22:13:20Z",
+  "note": "Sample channel demo: warm in Jakarta.",
+  "refreshCities": [
+    { "cityName": "Jakarta", "countryCode": "ID", "expectedStatus": "Completed", "expectedAttempts": 1, "temperatureCelsius": 20 },
+    { "cityName": "Bandung", "countryCode": "ID", "expectedStatus": "Completed", "expectedAttempts": 2, "temperatureCelsius": 22, "firstProviderStatus": 503 },
+    { "cityName": "Surabaya", "countryCode": "ID", "expectedStatus": "Failed", "expectedAttempts": 1, "providerStatus": 401 }
+  ]
+}

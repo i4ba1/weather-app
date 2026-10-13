@@ -2,7 +2,7 @@ namespace WeatherApp.Application.Common;
 
 public enum WeatherFailure { Configuration, Upstream, Timeout }
 
-public sealed class WeatherServiceException(WeatherFailure failure)
+public sealed class WeatherServiceException(WeatherFailure failure, bool isTransient = false)
     : Exception(failure switch
     {
         WeatherFailure.Configuration => "Weather service is not configured. Set the server's OpenWeatherMap API key.",
@@ -11,4 +11,5 @@ public sealed class WeatherServiceException(WeatherFailure failure)
     })
 {
     public WeatherFailure Failure { get; } = failure;
+    public bool IsTransient { get; } = isTransient || failure == WeatherFailure.Timeout;
 }

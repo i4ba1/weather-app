@@ -7,6 +7,7 @@ using WeatherApp.Application.Countries;
 using WeatherApp.Infrastructure.Locations;
 using WeatherApp.Infrastructure.Persistence;
 using WeatherApp.Infrastructure.Weather;
+using WeatherApp.Infrastructure.RefreshJobs;
 
 namespace WeatherApp.Infrastructure;
 
@@ -38,6 +39,14 @@ public static class DependencyInjection
         }
         services.AddDbContext<WeatherDbContext>(options => options.UseSqlite(connection.ToString()));
         services.AddScoped<IWeatherNoteRepository, WeatherNoteRepository>();
+        services.AddScoped<IWeatherRefreshRepository, WeatherRefreshRepository>();
+        services.AddOptions<WeatherRefreshOptions>().Bind(configuration.GetSection("WeatherRefresh"))
+            .Validate(x => x.Capacity is >= 1 and <= 1000 && x.Workers is >= 1 and <= 8
+                && x.MaxAttempts is >= 1 and <= 5 && x.DispatcherIntervalMilliseconds is >= 10 and <= 60000
+                && x.ProviderIntervalMilliseconds is >= 0 and <= 60000 && x.RetryBaseMilliseconds is >= 10 and <= 60000,
+                "Invalid WeatherRefresh queue, worker, pacing or retry settings.").ValidateOnStart();
+        services.AddSingleton<WeatherRefreshQueue>();
+        services.AddHostedService<WeatherRefreshService>();
         return services;
     }
 }

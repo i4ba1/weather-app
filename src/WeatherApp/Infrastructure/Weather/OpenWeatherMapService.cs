@@ -18,7 +18,9 @@ public sealed class OpenWeatherMapService(HttpClient client, IOptions<OpenWeathe
         try
         {
             using var response = await client.GetAsync(url, cancellationToken);
-            if (!response.IsSuccessStatusCode) throw new WeatherServiceException(WeatherFailure.Upstream);
+            if (!response.IsSuccessStatusCode) throw new WeatherServiceException(WeatherFailure.Upstream,
+                response.StatusCode is System.Net.HttpStatusCode.TooManyRequests or System.Net.HttpStatusCode.RequestTimeout
+                    || (int)response.StatusCode >= 500);
             using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
             return Map(json.RootElement, cityName, countryCode);
         }
@@ -29,7 +31,7 @@ public sealed class OpenWeatherMapService(HttpClient client, IOptions<OpenWeathe
         catch (HttpRequestException)
         {
             // Do not attach the exception: it can include the request URI and API key.
-            throw new WeatherServiceException(WeatherFailure.Upstream);
+            throw new WeatherServiceException(WeatherFailure.Upstream, isTransient: true);
         }
         catch (Exception exception) when (exception is JsonException or KeyNotFoundException or InvalidOperationException or FormatException or ArgumentOutOfRangeException or OverflowException)
         {

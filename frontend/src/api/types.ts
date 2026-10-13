@@ -18,3 +18,14 @@ export interface WeatherDto {
 export interface CreateNoteCommand { cityName: string; countryCode: string; text: string }
 export interface CreatedNoteDto { id: string; createdAtUtc: string }
 export interface ProblemDetails { title?: string; detail?: string; errors?: Record<string, string[]> }
+export type RefreshCityStatus = 'Pending' | 'Running' | 'Completed' | 'Failed';
+export type RefreshJobStatus = RefreshCityStatus | 'CompletedWithErrors';
+export interface RefreshCityDto {
+  cityName: string; countryCode: string; status: RefreshCityStatus;
+  attempts: number; weather: WeatherDto | null; error: string | null;
+}
+export interface RefreshJobDto {
+  id: string; createdAtUtc: string; status: RefreshJobStatus; cities: RefreshCityDto[];
+}
+export interface AcceptedRefreshJobDto { id: string }
+export interface CreateRefreshJobCommand { cities: { cityName: string; countryCode: string }[] }

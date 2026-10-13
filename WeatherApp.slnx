@@ -3,6 +3,7 @@
     <Project Path="src/WeatherApp/WeatherApp.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/WeatherApp.RecordingHost/WeatherApp.RecordingHost.csproj" />
     <Project Path="tests/WeatherApp.Tests/WeatherApp.Tests.csproj" />
   </Folder>
 </Solution>

@@ -41,3 +41,33 @@ test('note validation failures are shown to the user', async ({ page }) => {
   await page.getByRole('button', { name: 'Save note' }).click();
   await expect(page.getByRole('alert')).toContainText('Note is invalid.');
 });
+
+test('background multi-city refresh shows partial results and resumes after reload', async ({ page }) => {
+  const jobId = '12345678-1234-1234-1234-123456789abc';
+  const job = {
+    id: jobId, createdAtUtc: '2023-11-14T22:13:20Z', status: 'CompletedWithErrors',
+    cities: [
+      { cityName: 'Jakarta', countryCode: 'ID', status: 'Completed', attempts: 1, weather, error: null },
+      { cityName: 'Bandung', countryCode: 'ID', status: 'Failed', attempts: 3, weather: null, error: 'Synthetic timeout for browser test.' },
+    ],
+  };
+  let submissions = 0;
+  let polls = 0;
+  await page.route('**/api/countries/ID/cities', route => route.fulfill({ json: [{ name: 'Jakarta', countryCode: 'ID' }, { name: 'Bandung', countryCode: 'ID' }] }));
+  await page.route('**/api/weather/refresh-jobs', async route => {
+    submissions++;
+    expect(route.request().postDataJSON()).toEqual({ cities: [{ cityName: 'Jakarta', countryCode: 'ID' }, { cityName: 'Bandung', countryCode: 'ID' }] });
+    await route.fulfill({ status: 202, json: { id: jobId } });
+  });
+  await page.route(`**/api/weather/refresh-jobs/${jobId}`, route => route.fulfill({ json: ++polls === 1 ? { ...job, status: 'Running' } : job }));
+  await page.goto('/');
+  await page.getByLabel('Country', { exact: true }).selectOption('ID');
+  await page.getByRole('button', { name: 'Refresh all cities' }).click();
+  await expect(page.getByText('Running', { exact: true })).toBeVisible();
+  await expect(page.getByText('CompletedWithErrors', { exact: true })).toBeVisible();
+  await expect(page.getByText('Synthetic timeout for browser test.')).toBeVisible();
+  await expect(page.getByText('2 / 2 cities finished')).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('CompletedWithErrors', { exact: true })).toBeVisible();
+  expect(submissions).toBe(1);
+});
